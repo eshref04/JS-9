@@ -1,99 +1,69 @@
-const allAddBtn = document.querySelectorAll(".add__btn");
 
+function addToBasket(id, name, image) {
+  let basketItems = JSON.parse(localStorage.getItem('basketItems')) || [];
 
-for (let i = 0; i < allAddBtn.length; i++) {
-  allAddBtn[i].addEventListener("click", function (e) {
-    e.preventDefault();
+  const existingItem = basketItems.find(item => item.id === id);
 
-   
-    let Id = this.getAttribute("data-id");
+  if (existingItem) {
+      existingItem.count++;
+  } else {
+      basketItems.push({ id, name, image, count: 1 });
+  }
 
-    
-    let cardBody = this.parentElement;
-    let Name = cardBody.querySelector(".card-title").textContent;
-    let Image = cardBody.parentElement.querySelector("img").getAttribute("src");
+  localStorage.setItem('basketItems', JSON.stringify(basketItems));
 
-    
-    if (!localStorage.getItem("basket")) {
-      localStorage.setItem("basket", "[]");
-    }
+  updateBasketIconCount();
+}
 
-    let basket = JSON.parse(localStorage.getItem("basket"));
+function updateBasketIconCount() {
+  let basketItems = JSON.parse(localStorage.getItem('basketItems')) || [];
+  let totalCount = basketItems.reduce((total, item) => total + item.count, 0);
+  document.querySelector('.shop__icon__sup').textContent = totalCount;
+}
 
-    
-    let existingProduct = null;
-    for (let j = 0; j < basket.length; j++) {
-      if (basket[j].id === Id) {
-        existingProduct = basket[j];
-        break;
-      }
-    }
+function initBasketCount() {
+  let basketItems = JSON.parse(localStorage.getItem('basketItems')) || [];
+  let totalCount = basketItems.reduce((total, item) => total + item.count, 0);
+  document.querySelector('.shop__icon__sup').textContent = totalCount;
+}
 
-    
-    if (!existingProduct) {
-      basket.push({
-        id: Id,
-        count: 1,
-        name: Name,
-        image: Image,
-      });
-    } else {
-      
-      existingProduct.count++;
-    }
+document.querySelectorAll('.add__btn').forEach(button => {
+  button.addEventListener('click', function(event) {
+      let card = event.target.closest('.card');
+      let id = card.getAttribute('data-id');
+      let name = card.querySelector('.card-title').textContent;
+      let image = card.querySelector('.card-img-top').src;
+      addToBasket(id, name, image);
+  });
+});
 
-    localStorage.setItem("basket", JSON.stringify(basket));
+initBasketCount();
 
-    
-    updateBasketCount();
+function displayBasketItems() {
+  let basketItems = JSON.parse(localStorage.getItem('basketItems')) || [];
+  let tbody = document.querySelector('tbody');
+
+  tbody.innerHTML = '';
+
+  if (basketItems.length === 0) {
+      document.querySelector('.text-danger').classList.remove('d-none');
+      return;
+  } else {
+      document.querySelector('.text-danger').classList.add('d-none');
+  }
+
+  basketItems.forEach(item => {
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+          <td><img src="${item.image}" alt="Product Image" style="width: 50px; height: 50px;"></td>
+          <td>${item.name}</td>
+          <td>${item.count}</td>
+      `;
+      tbody.appendChild(tr);
   });
 }
 
-
-function updateBasketCount() {
-  let basketCountElement = document.querySelector(".shop__icon__sup");
-  let basket = JSON.parse(localStorage.getItem("basket"));
+displayBasketItems();
 
 
-  let totalCount = 0;
-  for (let k = 0; k < basket.length; k++) {
-    totalCount += basket[k].count;
-  }
-
-  
-  basketCountElement.textContent = totalCount;
-}
-
-
-updateBasketCount();
-
-const table = document.querySelector(".table");
-let basket = JSON.parse(localStorage.getItem("basket"));
-
-if (basket.length !== 0) {
-  for (let i = 0; i < basket.length; i++) {
-    let product = basket[i];
-    let tr = document.createElement("tr");
-
-    let tdImg = document.createElement("td");
-    let img = document.createElement("img");
-    img.setAttribute("src", product.image);
-    img.setAttribute("width", "150px");
-    tdImg.appendChild(img);
-
-    let tdName = document.createElement("td");
-    tdName.innerText = product.name;
-
-    let tdCount = document.createElement("td");
-    tdCount.innerText = product.count;
-
-    tr.appendChild(tdImg);
-    tr.appendChild(tdName);
-    tr.appendChild(tdCount);
-
-    table.lastElementChild.appendChild(tr);
-  }
-} else {
-  table.previousElementSibling.classList.remove("d-none");
-}
 
